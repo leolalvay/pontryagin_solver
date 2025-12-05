@@ -27,8 +27,8 @@ for i = 1:N
     ti   = t_nodes(i);
     tip1 = t_nodes(i+1);
     % Evaluate gradients of smooth Hamiltonian at i and i+1
-    [~, gradp_i, ~] = core.smoothing.eval_H_smooth(bundle, problem, pi, xi, ti, delta);
-    [~, ~, gradx_ip1] = core.smoothing.eval_H_smooth(bundle, problem, pip1, xip1, tip1, delta);
+    [~, gradp_i, ~] = core.smoothing().eval_H_smooth(bundle, problem, pi, xi, ti, delta);
+    [~, ~, gradx_ip1] = core.smoothing().eval_H_smooth(bundle, problem, pip1, xip1, tip1, delta);
     % Residuals: r_x = xi + dt*gradp_i - x_{i+1}; r_p = p_{i+1} + dt*gradx_{i+1} - p_i
     r_x = xi + dt * gradp_i - xip1;
     r_p = pip1 + dt * gradx_ip1 - pi;
