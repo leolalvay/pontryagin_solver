@@ -18,7 +18,7 @@ N  = length(t_nodes) - 1;
 if ~isequal(Xinit(:,1), problem.x0(:))
     Xinit(:,1) = problem.x0(:);
 end
-z = core.integrators.pack_unknowns(Xinit, Pinit);
+z = core.integrators().pack_unknowns(Xinit, Pinit);
 % Parse options
 if nargin < 7
     options = struct();
