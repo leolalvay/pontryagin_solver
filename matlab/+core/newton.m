@@ -1,3 +1,8 @@
+function M = newton()
+%NEWTON Module factory (Python-like).
+M.solve_tpbvp = @solve_tpbvp;
+end
+
 function [X, P, info] = solve_tpbvp(problem, bundle, delta, t_nodes, Xinit, Pinit, options)
 %SOLVE_TPBVP Solve the canonical TPBVP using damped Newton method.
 %   [X,P,info] = solve_tpbvp(problem, bundle, delta, t_nodes, Xinit, Pinit, options)
@@ -33,14 +38,14 @@ info.iterations = 0;
 info.residual_norms = [];
 for k = 1:maxIter
     info.iterations = k;
-    R = core.shooting.shooting_residual(problem, bundle, delta, t_nodes, z);
+    R = core.shooting().shooting_residual(problem, bundle, delta, t_nodes, z);
     res_norm = norm(R, Inf);
     info.residual_norms(end+1) = res_norm;
     if res_norm < tol
         break;
     end
     % Assemble Jacobian
-    J = core.shooting.shooting_jacobian(problem, bundle, delta, t_nodes, z);
+    J = core.shooting().shooting_jacobian(problem, bundle, delta, t_nodes, z);
     % Solve linear system J * dz = -R
     % Use MATLAB backslash for efficiency; may use sparse J if large
     dz = -J \ R;
@@ -49,7 +54,7 @@ for k = 1:maxIter
     f0 = res_norm;
     z_new = z + lam * dz;
     % Evaluate new residual
-    R_new = core.shooting.shooting_residual(problem, bundle, delta, t_nodes, z_new);
+    R_new = core.shooting().shooting_residual(problem, bundle, delta, t_nodes, z_new);
     f_new = norm(R_new, Inf);
     % Armijo condition: f_new <= (1 - alpha*lam) * f0
     while f_new > (1 - alpha * lam) * f0
@@ -58,12 +63,12 @@ for k = 1:maxIter
             break;
         end
         z_new = z + lam * dz;
-        R_new = core.shooting.shooting_residual(problem, bundle, delta, t_nodes, z_new);
+        R_new = core.shooting().shooting_residual(problem, bundle, delta, t_nodes, z_new);
         f_new = norm(R_new, Inf);
     end
     z = z_new;
 end
-[X, P] = core.integrators.unpack_unknowns(z, n, N);
+[X, P] = core.integrators().unpack_unknowns(z, n, N);
 X(:,1) = problem.x0(:);
 info.final_residual = info.residual_norms(end);
 end

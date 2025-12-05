@@ -1,3 +1,11 @@
+function M = integrators()
+%INTEGRATORS Module factory (Python-like).
+M.pack_unknowns     = @pack_unknowns;
+M.unpack_unknowns   = @unpack_unknowns;
+M.assemble_residual = @assemble_residual;
+M.assemble_jacobian = @assemble_jacobian;
+end
+
 function R = assemble_residual(problem, bundle, delta, t_nodes, X, P)
 %ASSEMBLE_RESIDUAL Assemble the residual vector for the canonical system.
 %   R = assemble_residual(problem, bundle, delta, t_nodes, X, P) returns
