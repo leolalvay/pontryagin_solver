@@ -68,3 +68,4 @@ xlabel('t'); ylabel('u'); title('Control u');
 
 result = res;
 end
+init_ctrl = zeros(size(B,2),1);
