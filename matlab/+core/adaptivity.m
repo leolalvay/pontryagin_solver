@@ -55,7 +55,7 @@ log.eta_delta= [];
 for k = 1:max_iters
     % Solve TPBVP on current discretisation
     opts = struct('tol', 1e-8, 'maxIter', 50, 'alpha', 1e-4, 'beta', 0.5, 'lam_min', 1e-8);
-    [X, P, info] = core.newton().solve_tpbvp(problem, bundle, delta, t_nodes, Xinit, Pinit, opts);
+    [X, P, info] = core.newton(problem, bundle, delta, t_nodes, Xinit, Pinit, opts);
     % Compute a posteriori error indicators
     [eta_time, local_time_err] = estimate_time_error(problem, bundle, delta, t_nodes, X, P);
     eta_PA   = estimate_PA_error(problem, bundle, t_nodes, X, P);
