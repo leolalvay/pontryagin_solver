@@ -1,3 +1,11 @@
+function M = smoothing()
+%SMOOTHING Module factory (Python-like).
+M.eval_H_smooth = @eval_H_smooth;
+M.eval_f_smooth = @eval_f_smooth;
+M.eval_H        = @eval_H;
+M.eval_f        = @eval_f;
+end
+
 function [Hdelta, gradp, gradx] = eval_H_smooth(bundle, problem, p, x, t, delta)
 %EVAL_H_SMOOTH Smooth approximation of the PA Hamiltonian.
 %   Computes the smoothed Hamiltonian H_delta(p,x,t) for the given
