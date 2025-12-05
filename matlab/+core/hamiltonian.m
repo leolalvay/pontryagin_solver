@@ -1,3 +1,8 @@
+function M = hamiltonian()
+%HAMILTONIAN Module factory (Python-like).
+M.compute_H = @compute_H;
+end
+
 function [Hval, a_star] = compute_H(problem, p, x, t, bundle, restricted)
 %COMPUTE_H Evaluate the true Hamiltonian H or restricted H_K.
 %   [Hval, a_star] = compute_H(problem, p, x, t, bundle, restricted)

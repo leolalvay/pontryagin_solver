@@ -108,7 +108,7 @@ for i = 1:N+1
     p_i = P(:,i);
     x_i = X(:,i);
     t_i = t_nodes(i);
-    [~, a_star] = core.hamiltonian.compute_H(problem, p_i, x_i, t_i, bundle, false);
+    [~, a_star] = core.hamiltonian().compute_H(problem, p_i, x_i, t_i, bundle, false);
     u(:,i) = a_star;
 end
 
@@ -161,7 +161,7 @@ for i = 1:N+1
     % Surrogate Hbar
     [Hbar, ~] = bundle.eval(problem, p_i, x_i, t_i);
     % True H_K (state constraints) – restrict to tangent cone
-    [Htrue, ~] = core.hamiltonian.compute_H(problem, p_i, x_i, t_i, bundle, true);
+    [Htrue, ~] = core.hamiltonian().compute_H(problem, p_i, x_i, t_i, bundle, true);
     vals(i) = Hbar - Htrue;
 end
 % Integrate by trapezoidal rule
@@ -234,7 +234,7 @@ for i = 1:N+1
     x_i = X(:,i);
     t_i = t_nodes(i);
     [Hbar, ~] = bundle.eval(problem, p_i, x_i, t_i);
-    [Htrue, a_star] = core.hamiltonian.compute_H(problem, p_i, x_i, t_i, bundle, true);
+    [Htrue, a_star] = core.hamiltonian().compute_H(problem, p_i, x_i, t_i, bundle, true);
     gaps(i) = Hbar - Htrue;
     a_cands(:,i) = a_star;
 end
