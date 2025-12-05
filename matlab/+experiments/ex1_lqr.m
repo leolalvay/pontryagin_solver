@@ -30,7 +30,7 @@ N0 = 20;
 t_nodes = linspace(0, T, N0+1);
 
 % Solve using adaptive solver
-res = core.adaptivity.solve_optimal_control(prob, t_nodes, 1e-3, 1e-3, 1e-3, 10);
+res = core.adaptivity().solve_optimal_control(prob, t_nodes, 1e-3, 1e-3, 1e-3, 10);
 
 % Compute objective value J = x(T)^T Qf x(T) + ∫0^T (x^T Q x + u^T R u) dt
 t = res.t;
