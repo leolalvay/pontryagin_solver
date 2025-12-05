@@ -1,0 +1,11 @@
+.DS_Store
+Thumbs.db
+*.asv
+*.m~
+slprj/
+codegen/
+*.mex*
+*.p
+.vscode/
+results/
+.MATLABDriveTag
