@@ -139,8 +139,8 @@ for i = 1:N
     xip1 = X(:,i+1);
     pi   = P(:,i);
     pip1 = P(:,i+1);
-    [~, gradp_i, ~] = core.smoothing.eval_H_smooth(bundle, problem, pi, xi, ti, delta);
-    [~, gradp_ip1, ~] = core.smoothing.eval_H_smooth(bundle, problem, pip1, xip1, tip1, delta);
+    [~, gradp_i, ~] = core.smoothing().eval_H_smooth(bundle, problem, pi, xi, ti, delta);
+    [~, gradp_ip1, ~] = core.smoothing().eval_H_smooth(bundle, problem, pip1, xip1, tip1, delta);
     dt = tip1 - ti;
     % Error estimate: change in gradient multiplied by dt
     local_err(i) = norm(gradp_ip1 - gradp_i, 2) * dt;
@@ -177,7 +177,7 @@ for i = 1:N+1
     p_i = P(:,i);
     x_i = X(:,i);
     t_i = t_nodes(i);
-    [Hdelta, ~, ~] = core.smoothing.eval_H_smooth(bundle, problem, p_i, x_i, t_i, delta);
+    [Hdelta, ~, ~] = core.smoothing().eval_H_smooth(bundle, problem, p_i, x_i, t_i, delta);
     [Hbar, ~] = bundle.eval(problem, p_i, x_i, t_i);
     vals(i) = Hdelta - Hbar;
 end
