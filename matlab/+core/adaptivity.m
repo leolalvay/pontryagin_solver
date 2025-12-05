@@ -1,4 +1,4 @@
-function result = solve_optimal_control(problem, initial_mesh, tol_time, tol_PA, tol_delta, max_iters)
+function result = adaptivity(problem, initial_mesh, tol_time, tol_PA, tol_delta, max_iters)
 %SOLVE_OPTIMAL_CONTROL Adaptive solver for optimal control problems.
 %   result = solve_optimal_control(problem, initial_mesh, tol_time, tol_PA, tol_delta, max_iters)
 %   runs the outer adaptivity loop described in Algorithm 3.1 of the
