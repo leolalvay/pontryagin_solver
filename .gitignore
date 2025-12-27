@@ -9,3 +9,7 @@ codegen/
 .vscode/
 results/
 .MATLABDriveTag
+
+# Python artifacts
+__pycache__/
+*.pyc
