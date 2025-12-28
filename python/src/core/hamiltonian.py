@@ -65,7 +65,7 @@ def compute_H(problem, p: np.ndarray, x: np.ndarray, t: float, candidate_control
         if is_new:
             unique.append(u)
     candidates = unique
-    # evaluate
+    # Candidate evaluation loop
     best_val = np.inf
     best_control = None
     for u in candidates:

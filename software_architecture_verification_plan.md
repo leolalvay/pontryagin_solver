@@ -29,6 +29,29 @@ implementations.
 
     -   the smoothing parameter $\delta$.
 
+    **Algorithm 3.1 — Adaptive smoothed-PMP outer loop (pseudocode)**
+
+    ```text
+    Initialize mesh {t_i}, PA bundle H̄_0, smoothing parameter δ_0,
+    and tolerances ε_time, ε_PA, ε_δ.
+    k ← 0
+    while not converged do
+        Solve TPBVP via Newton (Algorithm 3.2)
+        Compute indicators η_time, η_PA, η_δ
+        if η_time > ε_time then
+            Refine time mesh
+        end if
+        if η_PA > ε_PA then
+            Add PA planes (augment the PA bundle)
+        end if
+        if η_δ > ε_δ then
+            Decrease δ
+        end if
+        k ← k + 1
+    end while
+    Return x(t), p(t), u(t), refined mesh, final δ, and final bundle
+    ```
+
     At each outer iteration it solves the TPBVP via Newton, computes
     a-posteriori error indicators, and decides which discretisation
     component to refine next.
@@ -53,12 +76,13 @@ implementations.
     -   Final mesh and bundle satisfying all error tolerances.
 
     *Complexity.* Iterative loop. Each outer iteration calls the Newton
-    solver (Algorithm [\[alg:newton\]](#alg:newton){reference-type="ref" reference="alg:newton"}) with cost dominated by solving a
+    solver (Algorithm 3.2) with cost dominated by solving a
     sparse linear system; typically only a few outer iterations are required
     until all indicators fall below tolerances.
 
     *Manuscript reference.* Algorithm 3.1 (p. 5), which uses the error
     indicators $\eta_{\text{time}},\eta_{\text{PA}},\eta_{\delta}$.
+    
 
 2.  **Multiple-Shooting Newton (Damped)**
     []{#alg:newton label="alg:newton"}
@@ -67,6 +91,19 @@ implementations.
     Maximum Principle using a multiple-shooting formulation and Newton's
     method with damping (Armijo line search). The unknown is the full set
     of node values for $x(t)$ and $p(t)$.
+
+    **Algorithm 3.2 -(Damped) Newton solver for symplectic discretization**
+
+    ```text
+    Given δ, the mesh, and the current surrogate H_δ; initialize (x^(0), p^(0)).
+
+    for n = 0, 1, 2, ... until convergence do
+        Form the residual R(x^(n), p^(n)).
+        Assemble or approximate the Jacobian J^(n) = ∂R/∂(x, p).
+        Solve J^(n) Δ = -R.
+        Update (x^(n+1), p^(n+1)) ← (x^(n), p^(n)) + α Δ.   (α: damping/line-search step)
+    end for
+    ```
 
     *Inputs.*
 

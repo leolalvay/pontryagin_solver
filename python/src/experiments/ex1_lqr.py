@@ -38,7 +38,7 @@ def run_example():
         return float(x.dot(Qf.dot(x)))
     # control bounds (approximate unconstrained by large bounds)
     u_min = np.array([-5.0])
-    u_max = np.array([5.0])
+    u_max = np.array([5.0]) 
     # create problem
     prob = OCPProblem(dynamics, stage_cost, terminal_cost, x0, T,
                       control_bounds=(u_min, u_max), state_bounds=None)
@@ -53,6 +53,7 @@ def run_example():
     bundle = result['bundle']
     # approximate control at nodes by computing H argmin
     controls = []
+   
     for i in range(len(mesh)):
         _, u_star = compute_H(prob, P[i], X[i], mesh[i], bundle.controls, restricted=True)
         controls.append(u_star)
