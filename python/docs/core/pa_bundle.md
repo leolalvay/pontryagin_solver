@@ -1,42 +1,94 @@
 # `core/pa_bundle.py` — PA Bundle (`PABundle`)
 
-This module implements the **PA bundle**, the data structure that stores a finite set of candidate controls. The bundle is central to the adaptive smoothed-PMP method because it defines a **finite surrogate Hamiltonian** and provides reusable candidates for Hamiltonian minimization across time.
+This module implements the **PA bundle**, the data structure that stores a finite set of candidate controls. The bundle is central to the adaptive smoothed-PMP method because it defines a **piecewise-affine (PA) surrogate Hamiltonian** (PA in the costate variable $p$) and provides reusable control candidates for Hamiltonian minimization across time.
 
 In the codebase, the bundle is typically passed around as `bundle`, and the candidate set is accessed as `bundle.controls`.
 
 ---
 
-## 1) Mathematical role of the PA bundle
+## 1) Mathematical role of the PA bundle (PA upper bound in $p$)
 
-For a fixed $(p,x,t)$, define the Hamiltonian integrand
+For a fixed $(x,t)$, define the Hamiltonian integrand
 $$
 \mathcal{H}(p,x,u,t) := p^\top f(x,u,t) + \ell(x,u,t).
 $$
 
 The **true Hamiltonian** (minimization convention) is
 $$
-H(p,x,t) := \min_{u\in A} \mathcal{H}(p,x,u,t),
+H(p,x,t) := \min_{u\in A}\, \mathcal{H}(p,x,u,t)
+= \min_{u\in A}\Big\{\, p^\top f(x,u,t) + \ell(x,u,t)\,\Big\},
 $$
 where $A=[u_{\min},u_{\max}]$ is the control box.
 
+### Concavity in $p$ and supporting hyperplanes
+
+For each fixed $(x,t)$, the map $p\mapsto H(p,x,t)$ is **concave**, because it is the pointwise minimum of affine functions of $p$. Therefore, for any reference point $\hat p$ and any subgradient $g\in \partial_p H(\hat p,x,t)$,
+$$
+H(p,x,t)\;\le\; H(\hat p,x,t) + g^\top (p-\hat p),\qquad \forall p.
+$$
+
+By defining  
+$$
+g_i(x,t):=\partial_pH(\hat{p}_i,x,t)\\
+d_i(x,t):=H(\hat{p}_i,x,t)-g_i(x,t)\hat{p}_i
+$$
+We construct a piecewise-affine (PA) surrogate
+$$
+\bar{H}(p,x,t)=\min_{1\leq i\leq M}\{g_i(x,t)\cdot p+d_i(x,t)\}
+$$
+which satisfies
+$$
+H(p,x,t)\leq \bar{H}(p,x,t)
+$$
+For the Hamiltonian above, any minimizer $\hat u \in \arg\min_{u\in A}\mathcal{H}(\hat p,x,u,t)$ provides a valid subgradient:
+$$
+g = \partial_p H(\hat p,x,t) = f(x,\hat u,t),
+$$
+and
+$$
+H(\hat p,x,t) = \hat p^\top f(x,\hat u,t) + \ell(x,\hat u,t).
+$$
+Substituting yields the supporting affine upper bound
+$$
+H(p,x,t)\;\le\; f(x,\hat u,t)^\top p + \ell(x,\hat u,t).
+$$
+### Bundle representation and surrogate $\bar H$
+
 The PA bundle stores a finite set of controls
 $$
-\mathcal{U}_{\mathrm{bundle}} = \{u^{(1)},\dots,u^{(K)}\} \subset A,
+\mathcal{U}_{\mathrm{bundle}} = \{u^{(1)},\dots,u^{(K)}\} \subset A.
 $$
-and defines the **bundle surrogate Hamiltonian**
+For each stored control $u^{(i)}$, define the affine function of $p$ (for the current $(x,t)$)
 $$
-\bar H(p,x,t) := \min_{u\in \mathcal{U}_{\mathrm{bundle}}}\mathcal{H}(p,x,u,t).
+\phi_i(p;x,t) := g_i(x,t)^\top p + d_i(x,t),
+\qquad
+g_i(x,t):= f(x,u^{(i)},t),\quad d_i(x,t):=\ell(x,u^{(i)},t).
+$$
+The **bundle surrogate Hamiltonian** is the minimum over these affine functions:
+$$
+\bar H(p,x,t) := \min_{i=1,\dots,K}\, \phi_i(p;x,t)
+= \min_{u\in \mathcal{U}_{\mathrm{bundle}}}\mathcal{H}(p,x,u,t).
+$$
+
+Because $\mathcal{U}_{\mathrm{bundle}}\subset A$, minimizing over a smaller set can only increase the minimum value, hence $\bar H$ is an **upper bound**:
+$$
+H(p,x,t)\;\le\;\bar H(p,x,t)\qquad \forall (p,x,t).
 $$
 
 ### Why this matters
-- $\bar H$ is cheap to evaluate (finite minimum).
+
+- $\bar H$ is cheap to evaluate (finite minimum / PA model in $p$).
 - The adaptive algorithm monitors the **bundle error indicator**
   $$
   \eta_{\mathrm{PA}} \approx \int_0^T\big(\bar H(p(t),x(t),t) - H(p(t),x(t),t)\big)\,dt,
   $$
   and refines the bundle when this gap is too large.
 
-> Important: $\bar H$ is a lower-resolution approximation of $H$ because it minimizes over a smaller set. Enlarging/improving the bundle improves $\bar H$ and (typically) reduces $\eta_{\mathrm{PA}}$.
+> Implementation note: the code typically stores **controls** $u^{(i)}$ (i.e., `bundle.controls`) rather than storing the affine coefficients $(g_i,d_i)$ explicitly. The coefficients are computed **on the fly** via
+> $$
+> g_i(x,t)=f(x,u^{(i)},t),\qquad d_i(x,t)=\ell(x,u^{(i)},t),
+> $$
+> whenever $\bar H(p,x,t)$ needs to be evaluated.
 
 ---
 
@@ -103,7 +155,7 @@ Whenever the algorithm finds a “useful” control candidate (e.g., from the sm
 
 ### 4.3 Bundle evaluation: computing $\bar H(p,x,t)$
 
-The bundle can evaluate the surrogate Hamiltonian by looping over its stored controls:
+The bundle evaluates the surrogate Hamiltonian by looping over its stored controls:
 $$
 \bar H(p,x,t) = \min_{u\in \mathcal U_{\mathrm{bundle}}} \mathcal{H}(p,x,u,t).
 $$
@@ -111,6 +163,41 @@ $$
 This is essentially the same minimization pattern as `compute_H`, but restricted to bundle controls only.
 
 ---
+
+### 4.4 Where do `bundle.controls` come from in this implementation?
+
+`PABundle` is a **passive container**: it does not generate controls by itself. It only stores controls passed to `add_control(u)` and later evaluates
+$$
+\bar H(p,x,t)=\min_{u\in \mathcal U_{\mathrm{bundle}}}\{p^\top f(x,u,t)+\ell(x,u,t)\}.
+$$
+
+In this repository, controls enter the bundle from the **outer adaptivity loop** (`core/adaptivity.py`):
+
+1. **Initialization (seed control).**  
+   At startup the bundle is created empty and seeded with one feasible control `u0`:
+   - if bounds exist, the midpoint $u_0=\tfrac12(u_{\min}+u_{\max})$ is added,
+   - otherwise $u_0=0$ is added.  
+   This prevents `bundle.evaluate(...)` from failing when the bundle is empty.
+
+2. **PA refinement (learning new controls).**  
+   When the PA indicator is too large, the outer loop locates the mesh node with the largest gap
+   $$
+   \bar H(p_i,x_i,t_i) - H(p_i,x_i,t_i),
+   $$
+   where $\bar H$ is computed by `bundle.evaluate(...)` (bundle-only) and $H$ is computed by
+   `compute_H(...)` (finite minimization over **box corners + bundle controls**).
+   The argmin control returned by `compute_H(...)` at the worst-gap node is then inserted:
+   $$
+   u^* \leftarrow \arg\min_{u\in \mathcal U_{\mathrm{cand}}}\{p_i^T f(x_i,u,t_i)+\ell(x_i,u,t_i)\},
+   \qquad
+   \texttt{bundle.add_control}(u^*).
+   $$
+
+**Key takeaway.** The bundle is populated by controls that are discovered as pointwise Hamiltonian minimizers
+during the adaptive loop (plus an initial seed control). The corners of the control box are not necessarily stored
+from the start; instead, they are always available as candidates inside `compute_H(...)` and may be added to the
+bundle later if they become active minimizers.
+
 
 ## 5) Relationship to `compute_H(...)`
 
@@ -161,4 +248,4 @@ When you see odd behavior (no improvement in $\eta_{\mathrm{PA}}$, weird control
 
 ## 8) Key takeaway
 
-The PA bundle defines a finite control set $\mathcal U_{\mathrm{bundle}}$ and hence a surrogate Hamiltonian $\bar H$. It is the main mechanism that makes the Hamiltonian minimization practical and reusable across time, especially in problems where the true minimizer is not captured well by box corners alone (e.g., interior solutions such as LQR).
+The PA bundle stores controls $\{u^{(i)}\}$ and induces a **piecewise-affine upper bound** $\bar H$ of the true Hamiltonian $H$ (upper bound because the minimization is restricted to a subset of admissible controls). It is the main mechanism that makes Hamiltonian evaluation practical and reusable across time, especially in problems where the true minimizer is not captured well by box corners alone (e.g., interior solutions such as LQR).
