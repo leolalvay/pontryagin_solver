@@ -162,6 +162,15 @@ $$
 
 This is essentially the same minimization pattern as `compute_H`, but restricted to bundle controls only.
 
+### `evaluate` flow (`pa_bundle.py`)
+
+- If there are no controls (`self.controls` is empty), raise `RuntimeError` (cannot evaluate).
+- Initialize `best_val = np.inf` and `best_idx = -1` as worst-case placeholders.
+- Loop over stored controls with `enumerate` to get both index `i` and control `u`:
+  - Compute `val = float(np.dot(p, problem.f(x, u, t)) + problem.l(x, u, t))`.
+  - If `val` is smaller than `best_val`, update `best_val = val` and `best_idx = i`.
+- After the loop, return `(best_val, best_idx)`: the minimum surrogate Hamiltonian value and the index of the control that achieved it.
+
 ---
 
 ### 4.4 Where do `bundle.controls` come from in this implementation?
