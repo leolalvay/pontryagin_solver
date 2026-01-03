@@ -74,6 +74,7 @@ def eval_H_smooth(problem, bundle, p: np.ndarray, x: np.ndarray, t: float, delta
     # approximate partial derivatives of g_i w.r.t x by central finite differences
     # note: g_i = p·f(x,a_i) + l(x,a_i)
     eps = 1e-6
+    #loop over the components of x to compute x_k^+ and x_k^-
     for dim in range(x.size):
         x_plus = x.copy()
         x_minus = x.copy()
@@ -82,6 +83,7 @@ def eval_H_smooth(problem, bundle, p: np.ndarray, x: np.ndarray, t: float, delta
         # compute g_i at x_plus and x_minus for each plane
         g_plus = np.empty(m)
         g_minus = np.empty(m)
+        #loop over the planes (controls) to compute the sum over the planes
         for i, u in enumerate(bundle.controls):
             f_plus = problem.f(x_plus, u, t)
             f_minus = problem.f(x_minus, u, t)

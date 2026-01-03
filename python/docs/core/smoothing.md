@@ -12,7 +12,7 @@ Given a problem in Bolza form (see `core/problem.py`) and a PA bundle (see `core
 $$
 \mathcal{U}_{\mathrm{bundle}}=\{u^{(1)},\dots,u^{(m)}\}\subset A,
 $$
-define, for each candidate control $$u^{(i)}$$, the “plane value”
+define, for each candidate control $$u^{(i)}$$ the “plane value”
 $$
 g_i(p,x,t)
 :=
@@ -218,26 +218,70 @@ $$
 
 ### Step 5: Compute $\nabla_x H_\delta$ by finite differences on $g_i$
 
-Instead of requiring analytic derivatives of $f$ and $\ell$, the code approximates, for each coordinate $k$,
-$$
-\partial_{x_k} g_i(p,x,t)
-\approx
-\frac{g_i(p,x+\varepsilon e_k,t)-g_i(p,x-\varepsilon e_k,t)}{2\varepsilon},
-\qquad \varepsilon=10^{-6}.
-$$
+## How the code computes the gradient w.r.t. $x$ (and the exact math behind it)
 
-Then it forms
+We define the bundle planes
 $$
-\partial_{x_k} H_\delta(p,x,t)
+g_i(p,x,t)=p^\top f(x,u^{(i)},t)+\ell(x,u^{(i)},t), \qquad i=1,\dots,m,
+$$
+and the log-sum-exp (soft-min) smoothing
+$$
+H_\delta(p,x,t)
 =
-\sum_i w_i \,\partial_{x_k} g_i(p,x,t).
+-\delta \log\!\left(\sum_{i=1}^m \exp\!\left(-\frac{g_i(p,x,t)}{\delta}\right)\right).
 $$
 
-Important nuance: this matches the exact log-sum-exp gradient identity
+Let the soft-min weights be
 $$
-\nabla_x H_\delta=\sum_i w_i \nabla_x g_i,
+w_i(p,x,t;\delta)
+=
+\frac{\exp\!\left(-g_i(p,x,t)/\delta\right)}
+{\sum_{j=1}^m \exp\!\left(-g_j(p,x,t)/\delta\right)},
+\qquad
+\sum_i w_i=1,\; w_i\ge 0.
 $$
-so you do **not** need to explicitly differentiate the weights; their dependence is already encoded by the identity.
+
+### Key identity (exact)
+
+For each component $x_k$, the gradient of the smoothed Hamiltonian satisfies
+$$
+\frac{\partial H_\delta}{\partial x_k}(p,x,t)
+=
+\sum_{i=1}^m w_i(p,x,t;\delta)\;
+\frac{\partial g_i}{\partial x_k}(p,x,t).
+$$
+
+Even though $w_i$ depends on $x$, this dependence is already accounted for in the log-sum-exp derivative, so there is no separate “$\partial w_i/\partial x_k$ term” in the final expression.
+
+### What the code does (finite differences on $g_i$ + weighted sum)
+
+1) Compute all $g_i(p,x,t)$ and the weights $w_i(p,x,t;\delta)$ once at the base point $(p,x,t)$.
+
+2) For each coordinate $k$ (with step $\varepsilon$), form perturbed states
+$x^+=x+\varepsilon e_k$ and $x^-=x-\varepsilon e_k$, and recompute each plane value:
+$$
+g_i^+ = g_i(p,x+\varepsilon e_k,t),
+\qquad
+g_i^- = g_i(p,x-\varepsilon e_k,t).
+$$
+
+3) Approximate the plane derivative by a central difference:
+$$
+\frac{\partial g_i}{\partial x_k}(p,x,t)
+\approx
+\frac{g_i^+-g_i^-}{2\varepsilon}.
+$$
+
+4) Combine using the exact identity:
+$$
+\frac{\partial H_\delta}{\partial x_k}(p,x,t)
+\approx
+\sum_{i=1}^m w_i(p,x,t;\delta)\;
+\frac{g_i^+-g_i^-}{2\varepsilon}.
+$$
+
+Stacking these components for $k=1,\dots,n$ yields the vector $\nabla_x H_\delta(p,x,t)$.
+
 
 Computational cost: approximating $\nabla_x H_\delta$ costs about $2mn$ extra evaluations of $f$ and $\ell$ (two-sided difference, across all $m$ planes, for each of the $n$ state components).
 
