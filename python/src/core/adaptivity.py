@@ -109,8 +109,8 @@ def solve_optimal_control(
             Hdelta_ip1, _, _ = eval_H_smooth(problem, bundle, P[i + 1], X[i + 1], t_nodes[i + 1], delta)
             Hbar_i, _ = bundle.evaluate(problem, P[i], X[i], t_nodes[i])
             Hbar_ip1, _ = bundle.evaluate(problem, P[i + 1], X[i + 1], t_nodes[i + 1])
-            diff_i = Hdelta_i - Hbar_i
-            diff_ip1 = Hdelta_ip1 - Hbar_ip1
+            diff_i = Hbar_i - Hdelta_i 
+            diff_ip1 = Hbar_ip1 - Hdelta_ip1
             dt = t_nodes[i + 1] - t_nodes[i]
             eta_delta += 0.5 * (diff_i + diff_ip1) * dt
         log.append({
@@ -180,6 +180,8 @@ def solve_optimal_control(
             P_guess = P
             continue
     # return final solution and log
+    if (X is None) or (len(t_nodes) != X.shape[0]) or (len(t_nodes) != P.shape[0]):
+        X, P, info = solve_tpbvp(problem, t_nodes, bundle, delta, X_guess, P_guess)
     return {
         't_nodes': t_nodes,
         'X': X,

@@ -47,6 +47,12 @@ def run_example():
     # solve adaptively
     result = solve_optimal_control(prob, t_nodes, tol_time=1e-3, tol_PA=1e-3, tol_delta=1e-3, max_iters=5, delta0=0.1)
     # extract solution
+    print("len(log) =", len(result["log"]))
+    print("last outer iter =", result["log"][-1]["iteration"])
+    print("len(t_nodes) =", len(result["t_nodes"]))
+    print("X.shape =", result["X"].shape)
+    print("P.shape =", result["P"].shape)
+
     X = result['X']
     P = result['P']
     mesh = result['t_nodes']
